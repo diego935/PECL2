@@ -1,23 +1,53 @@
-CREATE DATABASE PECL2A;
-
-
-
-CREATE TABLE  IF NOT EXISTS PERSONAS
-(
-    PERSON_ID CHAR(40) NOT NULL, -- Hay 36 carácteres en los que he visto, pero por si
-    PERSON_SEX VARCHAR(1),
-    PERSON_LASTNAME VARCHAR(255),
-    PERSON_FIRSTNAME VARCHAR(255),
-    PERSON_PHONE VARCHAR(20),
-    PERSON_ADDRESS VARCHAR(255),
-    PERSON_CITY VARCHAR(20),
-    PERSON_STATE VARCHAR(20),
-    PERSON_ZIP VARCHAR(5),
-    PERSON_SSN VARCHAR(11),
-    PERSON_DOB DATE
+CREATE DATABASE PECL2;
+create table if not exists personas_text(
+    PERSON_ID TEXT NOT NULL,
+    PERSON_SEX TEXT,
+    PERSON_LASTNAME TEXT,
+    PERSON_FIRSTNAME TEXT,
+    PERSON_PHONE TEXT,
+    PERSON_ADDRESS TEXT,
+    PERSON_CITY TEXT,
+    PERSON_STATE TEXT,
+    PERSON_ZIP TEXT,
+    PERSON_SSN TEXT,
+    PERSON_DOB TEXT,
+ --   constraint person_pk_t PRIMARY KEY (PERSON_ID)
 );
-CREATE TABLE IF NOT EXISTS ACCIDENTES --Le cambio el nombre
+CREATE TABLE IF NOT EXISTS collision_persona_text(
+    PERSON_ID TEXT NOT NULL,
+    PERSON_TYPE TEXT,
+    PERSON_INJURY TEXT,
+    VEHICLE_ID TEXT NOT NULL,
+    PERSON_AGE TEXT,
+    EJECTION TEXT,
+    EMOTIONAL_STATUS TEXT,
+    BODILY_INJURY TEXT,
+    POSITION_IN_VEHICLE TEXT,
+    SAFETY_EQUIPMENT TEXT,
+    PED_LOCATION TEXT,
+    PED_ACTION TEXT,
+    COMPLAINT TEXT,
+    PED_ROLE TEXT,
+    CONTRIBUTING_FACTOR_1 TEXT,
+    CONTRIBUTING_FACTOR_2 TEXT,
+    PERSON_SEX TEXT
+  --  CONSTRAINT colision_persona_t FOREIGN KEY (PERSON_ID) REFERENCES PERSONAS(PERSON_ID),
+  --  CONSTRAINT COLISION_VEHICULO_t FOREIGN KEY (VEHICLE_ID) REFERENCES vehicles(VEHICLE_ID)
+);
+
+-- vehicle_id;vehicle_year;vehicle_type;vehicle_model;vehicle_make
+create table if not exists vehicles_text(
+    VEHICLE_ID TEXT NOT NULL,
+    VEHICLE_YEAR TEXT,
+    VEHICLE_TYPE TEXT,
+    VEHICLE_MODEL TEXT,
+    VEHICLE_MAKE TEXT
+--    constraint vehicles_pk_t PRIMARY KEY (VEHICLE_ID)
+);
+CREATE TABLE IF NOT EXISTS accidentes_text --Le cambio el nombre
 (
+    VEHICLE_ID VARCHAR(40) NOT NULL,
+    PERSON_ID VARCHAR(40) NOT NULL,
     CRASH_DATE DATE NOT NULL,
     CRASH_TIME TIME NOT NULL,
     BOROUGH VARCHAR(255),
@@ -41,43 +71,11 @@ CREATE TABLE IF NOT EXISTS ACCIDENTES --Le cambio el nombre
     CONTRIBUTING_FACTOR_VEHICLE_3 VARCHAR(255),
     CONTRIBUTING_FACTOR_VEHICLE_4 VARCHAR(255),
     CONTRIBUTING_FACTOR_VEHICLE_5 VARCHAR(255)
+  --  constraint person_fk_t foreign key (PERSON_ID) references personas(PERSON_ID),
+  --  constraint vehicles_fk_t foreign key (VEHICLE_ID) references vehicles(VEHICLE_ID),
+  --  constraint accidentes_pk_t PRIMARY KEY (PERSON_ID, VEHICLE_ID)
 );
-CREATE TABLE IF NOT EXISTS COLLISION_PERSONA
-(
-    PERSON_ID VARCHAR(40) NOT NULL,
-    PERSON_TYPE VARCHAR(50),
-    PERSON_INJURY VARCHAR(50),
-    VEHICLE_ID VARCHAR(40) NOT NULL,
-    PERSON_AGE INT, check (PERSON_AGE >0),
-    EJECTION VARCHAR(50),
-    EMOTIONAL_STATUS VARCHAR(50),
-    BODILY_INJURY VARCHAR(50),
-    POSITION_IN_VEHICLE VARCHAR(50),
-    SAFETY_EQUIPMENT VARCHAR(50),
-    PED_LOCATION VARCHAR(50),
-    PED_ACTION VARCHAR(50),
-    COMPLAINT VARCHAR(255),
-    PED_ROLE VARCHAR(50),
-    CONTRIBUTING_FACTOR_1 VARCHAR(255),
-    CONTRIBUTING_FACTOR_2 VARCHAR(255),
-    PERSON_SEX VARCHAR(1),
-    CONSTRAINT colision_persona FOREIGN KEY (PERSON_ID) REFERENCES PERSONAS(PERSON_ID)
-);
-
-
-
-create table if not exists vehicles(
-    VEHICLE_ID VARCHAR(40) NOT NULL,
-    STATE_REGISTRATION VARCHAR(50) not null,
-    VEHICLE_TYPE VARCHAR(50),
-    VEHICLE_MAKE VARCHAR(50),
-    VEHICLE_MODEL VARCHAR(50),
-    VEHICLE_YEAR INT,
-    check(VEHICLE_YEAR > 1885), --> Es una chorrada, pero al parecer el primer vehiculo se creo en ese año: https://www.google.com/search?client=opera-gx&q=primer+automovil&sourceid=opera&ie=UTF-8&oe=UTF-8
-    constraint vehicles_pk PRIMARY KEY (VEHICLE_ID)
-);
-
-create table if not exists COLISION_VEHICULO(
+create table if not exists colision_vehicle_text(
     VEHICLE_ID VARCHAR(40) NOT NULL,
     PERSON_ID VARCHAR(40) not null ,
     TRAVEL_DIRECTION VARCHAR(50),
@@ -95,8 +93,152 @@ create table if not exists COLISION_VEHICULO(
     PUBLIC_PROPERTY_DAMAGE_TYPE VARCHAR(255),
     CONTRIBUTING_FACTOR_1 VARCHAR(255),
     CONTRIBUTING_FACTOR_2 VARCHAR(255),
+    constraint COLISION_VEHICULO_pk_t PRIMARY KEY (VEHICLE_ID, PERSON_ID),
+    constraint vehicles_fk_t foreign key (VEHICLE_ID) references PERSONAS(PERSON_ID),
+    CONSTRAINT colision_persona_t FOREIGN KEY (PERSON_ID) REFERENCES PERSONAS(PERSON_ID)
+);
 
+
+create table if not exists personas(
+    PERSON_ID CHAR(40) NOT NULL, -- Hay 36 carácteres en los que he visto, pero por si
+    PERSON_SEX VARCHAR(1),
+    PERSON_LASTNAME VARCHAR(255),
+    PERSON_FIRSTNAME VARCHAR(255),
+    PERSON_PHONE VARCHAR(20),
+    PERSON_ADDRESS VARCHAR(255),
+    PERSON_CITY VARCHAR(20),
+    PERSON_STATE VARCHAR(20),
+    PERSON_ZIP VARCHAR(5),
+    PERSON_SSN VARCHAR(11),
+    PERSON_DOB DATE,
+    constraint person_pk PRIMARY KEY (PERSON_ID)
+);
+CREATE TABLE IF NOT EXISTS collision_persona(
+    PERSON_ID VARCHAR(40) NOT NULL,
+    PERSON_TYPE VARCHAR(50),
+    PERSON_INJURY VARCHAR(50),
+    VEHICLE_ID VARCHAR(40) NOT NULL,
+    PERSON_AGE INT, check (PERSON_AGE >0),
+    EJECTION VARCHAR(50),
+    EMOTIONAL_STATUS VARCHAR(50),
+    BODILY_INJURY VARCHAR(50),
+    POSITION_IN_VEHICLE VARCHAR(50),
+    SAFETY_EQUIPMENT VARCHAR(50),
+    PED_LOCATION VARCHAR(50),
+    PED_ACTION VARCHAR(50),
+    COMPLAINT VARCHAR(255),
+    PED_ROLE VARCHAR(50),
+    CONTRIBUTING_FACTOR_1 VARCHAR(255),
+    CONTRIBUTING_FACTOR_2 VARCHAR(255),
+    PERSON_SEX VARCHAR(1),
+    CONSTRAINT colision_persona FOREIGN KEY (PERSON_ID) REFERENCES PERSONAS(PERSON_ID),
+    CONSTRAINT COLISION_VEHICULO FOREIGN KEY (VEHICLE_ID) REFERENCES vehicles(VEHICLE_ID)
+);
+
+
+create table if not exists vehicles(
+    VEHICLE_ID VARCHAR(256) NOT NULL,
+    STATE_REGISTRATION VARCHAR(256),
+    VEHICLE_TYPE VARCHAR(256),
+    VEHICLE_MAKE VARCHAR(256),
+    VEHICLE_MODEL VARCHAR(256),
+    VEHICLE_YEAR INT
+    --check(VEHICLE_YEAR > 1885), --> Es una chorrada, pero al parecer el primer vehiculo se creo en ese año: https://www.google.com/search?client=opera-gx&q=primer+automovil&sourceid=opera&ie=UTF-8&oe=UTF-8
+    --constraint vehicles_pk PRIMARY KEY (VEHICLE_ID)
+);
+CREATE TABLE IF NOT EXISTS accidentes --Le cambio el nombre
+(
+    COLLISION_ID varchar(200),
+    VEHICLE_ID VARCHAR(40),
+    PERSON_ID VARCHAR(40),
+    CRASH_DATE DATE,
+    CRASH_TIME TIME,
+    BOROUGH VARCHAR(255),
+    ZIP_CODE VARCHAR(5) , -- Creo que no debería ser único, en un mismo pueblo pueden ocurrit muchos accidentes no?
+    LATITUDE DECIMAL(9,6),
+    LONGITUDE DECIMAL(9,6),
+    LOCATION VARCHAR(255),
+    ON_STREET_NAME VARCHAR(255),
+    CROSS_STREET_NAME VARCHAR(255),
+    OFF_STREET_NAME VARCHAR(255),
+    NUMBER_OF_PERSONS_INJURED INT,
+    NUMBER_OF_PERSONS_KILLED INT,
+    NUMBER_OF_PEDESTRIANS_INJURED INT,
+    NUMBER_OF_PEDESTRIANS_KILLED INT,
+    NUMBER_OF_CYCLIST_INJURED INT,
+    NUMBER_OF_CYCLIST_KILLED INT,
+    NUMBER_OF_MOTORIST_INJURED INT,
+    NUMBER_OF_MOTORIST_KILLED INT,
+    CONTRIBUTING_FACTOR_VEHICLE_1 VARCHAR(255),
+    CONTRIBUTING_FACTOR_VEHICLE_2 VARCHAR(255),
+    CONTRIBUTING_FACTOR_VEHICLE_3 VARCHAR(255),
+    CONTRIBUTING_FACTOR_VEHICLE_4 VARCHAR(255),
+    CONTRIBUTING_FACTOR_VEHICLE_5 VARCHAR(255),
+    constraint person_fk foreign key (PERSON_ID) references personas(PERSON_ID),
+    constraint vehicles_fk foreign key (VEHICLE_ID) references vehicles(VEHICLE_ID),
+    constraint accidentes_pk PRIMARY KEY (COLLISION_ID)
+);
+
+create table if not exists colision_vehicle(
+    VEHICLE_ID VARCHAR(40) NOT NULL,
+    PERSON_ID VARCHAR(40) not null ,
+    TRAVEL_DIRECTION VARCHAR(50),
+    VEHICLE_OCCUPANTS INT,
+    DRIVER_SEX VARCHAR(1),
+    DRIVER_LICENSE_STATUS VARCHAR(50),
+    DRIVER_LICENSE_JURISDICTION VARCHAR(50),
+    PRE_CRASH VARCHAR(50),
+    POINT_OF_IMPACT VARCHAR(50),
+    VEHICLE_DAMAGE VARCHAR(255),
+    VEHICLE_DAMAGE_1 VARCHAR(255),
+    VEHICLE_DAMAGE_2 VARCHAR(255),
+    VEHICLE_DAMAGE_3 VARCHAR(255),
+    PUBLIC_PROPERTY_DAMAGE VARCHAR(255),
+    PUBLIC_PROPERTY_DAMAGE_TYPE VARCHAR(255),
+    CONTRIBUTING_FACTOR_1 VARCHAR(255),
+    CONTRIBUTING_FACTOR_2 VARCHAR(255),
     constraint COLISION_VEHICULO_pk PRIMARY KEY (VEHICLE_ID, PERSON_ID),
     constraint vehicles_fk foreign key (VEHICLE_ID) references PERSONAS(PERSON_ID),
     CONSTRAINT colision_persona FOREIGN KEY (PERSON_ID) REFERENCES PERSONAS(PERSON_ID)
 );
+
+
+COPY colisions.vehicles_text FROM 'C:\datos\Vehicles.csv' DELIMITER ';' CSV HEADER NULL '';
+COPY personas from ''
+insert into vehicles (select
+--VEHICLE_ID VARCHAR(40) NOT NULL,
+ --   STATE_REGISTRATION VARCHAR(50),
+ --   VEHICLE_TYPE VARCHAR(50),
+ --   VEHICLE_MAKE VARCHAR(50),
+  --  VEHICLE_MODEL VARCHAR(50),
+   -- VEHICLE_YEAR INT,
+-- vehicle_id;vehicle_year;vehicle_type;vehicle_model;vehicle_make
+                            VEHICLE_ID,
+                            null,
+                            VEHICLE_TYPE,
+                            VEHICLE_MAKE,
+                            VEHICLE_MODEL,
+                            cast(VEHICLE_YEAR as INT)
+                            from vehicles_text
+                               );
+
+
+--1 Mostrar los vehículos que han tenido más de un accidente
+SELECT DISTINCT * FROM vehicles WHERE VEHICLE_ID IN (SELECT VEHICLE_ID FROM Collisions_Crashes GROUP BY vehicles HAVING(VEHICLE_ID>1));
+
+--2. Mostrar todos los vehículos con una antigüedad de al menos 35 años.
+select distinct * from vehicles where VEHICLE_YEAR<= (Select extract(year from now())) - 35;
+
+
+--3. Mostrar el top 5 de las marcas de vehículos.
+select vehicle_make, count(*) from vehicles group by vehicle_make order by count(*) desc limit 5;
+
+-- 4 Mostrar los datos de aquellos conductores implicados en más de 1 accidente.
+SELECT DISTINCT * FROM PERSONAS WHERE PERSON_ZIP IN (SELECT PERSON_ZIP FROM ACCIDENTES GROUP BY vehicles HAVING(PERSON_ZIP>1));
+
+-- 5. Mostrar los datos de los conductores con accidentes mayores de 65 años y menores de 26 ordenados ascendentemente.
+SELECT * FROM PERSONAS WHERE (current_date-PERSON_DOB)  between 26 and 65 ORDER BY PERSON_DOB DESC
+
+--6. Mostrar los datos de los conductores que tienen como vehículo un “Pickup”
+select personas.* from personas,ACCIDENTES where personas.PERSON_ID = ACCIDENTES.PERSON_ID and ACCIDENTES.VEHICLE_ID = VEHICLES.
+
