@@ -12,29 +12,34 @@ CREATE DATABASE PECL2;
     PERSON_SSN TEXT,
     PERSON_DOB TEXT
  --   constraint person_pk_t PRIMARY KEY (PERSON_ID)
-);
+);*/
 CREATE TABLE IF NOT EXISTS collision_persona_text(
-    PERSON_ID TEXT NOT NULL,
-    PERSON_TYPE TEXT,
-    PERSON_INJURY TEXT,
-    VEHICLE_ID TEXT NOT NULL,
-    PERSON_AGE TEXT,
-    EJECTION TEXT,
-    EMOTIONAL_STATUS TEXT,
-    BODILY_INJURY TEXT,
-    POSITION_IN_VEHICLE TEXT,
-    SAFETY_EQUIPMENT TEXT,
-    PED_LOCATION TEXT,
-    PED_ACTION TEXT,
-    COMPLAINT TEXT,
-    PED_ROLE TEXT,
-    CONTRIBUTING_FACTOR_1 TEXT,
-    CONTRIBUTING_FACTOR_2 TEXT,
-    PERSON_SEX TEXT
+    UNIQUE_ID varchar(200),
+    COLLISION_ID varchar(200),
+    CRASH_DATE varchar(200),
+    CRASH_TIME varchar(200),
+    PERSON_ID varchar(200),
+    PERSON_TYPE varchar(200),
+    PERSON_INJURY varchar(200),
+    VEHICLE_ID  varchar(200),
+    PERSON_AGE varchar(200),
+    EJECTION varchar(200),
+    EMOTIONAL_STATUS varchar(200),
+    BODILY_INJURY varchar(200),
+    POSITION_IN_VEHICLE varchar(200),
+    SAFETY_EQUIPMENT varchar(200),
+    PED_LOCATION varchar(200),
+    PED_ACTION varchar(200),
+    COMPLAINT varchar(200),
+    PED_ROLE varchar(200),
+    CONTRIBUTING_FACTOR_1 varchar(200),
+    CONTRIBUTING_FACTOR_2 varchar(200),
+    PERSON_SEX varchar(200)
+
   --  CONSTRAINT colision_persona_t FOREIGN KEY (PERSON_ID) REFERENCES PERSONAS(PERSON_ID),
   --  CONSTRAINT COLISION_VEHICULO_t FOREIGN KEY (VEHICLE_ID) REFERENCES vehicles(VEHICLE_ID)
 );
-*/
+
 create table if not exists vehicles_text(
     VEHICLE_ID TEXT NOT NULL,
     VEHICLE_YEAR TEXT,
@@ -45,7 +50,6 @@ create table if not exists vehicles_text(
 );
 CREATE TABLE IF NOT EXISTS accidentes_text --Le cambio el nombre
 (
-
     CRASH_DATE varchar(200),
     CRASH_TIME time, -- varchar(200),
     BOROUGH VARCHAR(255),
@@ -70,11 +74,11 @@ CREATE TABLE IF NOT EXISTS accidentes_text --Le cambio el nombre
     CONTRIBUTING_FACTOR_VEHICLE_4 VARCHAR(255),
     CONTRIBUTING_FACTOR_VEHICLE_5 VARCHAR(255),
     COLLISION_ID VARCHAR(200),
+    VEHICLE_TYPE_CODE_1 varchar(200),
     VEHICLE_TYPE_CODE_2 varchar(200),
     VEHICLE_TYPE_CODE_3 varchar(200),
     VEHICLE_TYPE_CODE_4 varchar(200),
-    VEHICLE_TYPE_CODE_5 varchar(200),
-    VEHICLE_ID VARCHAR(240)
+    VEHICLE_TYPE_CODE_5 varchar(200)
 );
 
 create table if not exists colision_vehicle_text(
@@ -133,7 +137,7 @@ create table if not exists vehicles(
 );
 CREATE TABLE IF NOT EXISTS collision_persona(
     --UNIQUE_ID,COLLISION_ID,CRASH_DATE,CRASH_TIME,PERSON_ID,PERSON_TYPE,PERSON_INJURY,VEHICLE_ID,PERSON_AGE,EJECTION,EMOTIONAL_STATUS,BODILY_INJURY,POSITION_IN_VEHICLE,SAFETY_EQUIPMENT,PED_LOCATION,PED_ACTION,COMPLAINT,PED_ROLE,CONTRIBUTING_FACTOR_1,CONTRIBUTING_FACTOR_2,PERSON_SEX
-
+    UNIQUE_ID INT,
     COLLISION_ID INT,
     PERSON_ID VARCHAR(240),
     PERSON_TYPE VARCHAR(250),
@@ -182,43 +186,21 @@ CREATE TABLE IF NOT EXISTS accidentes --Le cambio el nombre
     CONTRIBUTING_FACTOR_VEHICLE_3 VARCHAR(255),
     CONTRIBUTING_FACTOR_VEHICLE_4 VARCHAR(255),
     CONTRIBUTING_FACTOR_VEHICLE_5 VARCHAR(255),
-    COLLISION_ID VARCHAR(200),
-    VEHICLE_ID VARCHAR(240),
-    PERSON_ID VARCHAR(240)
+    COLLISION_ID INT,
+    --VEHICLE_ID VARCHAR(240),
+    --PERSON_ID VARCHAR(240),
+    VEHICLE_TYPE_CODE_1 varchar(200),
+    VEHICLE_TYPE_CODE_2 varchar(200),
+    VEHICLE_TYPE_CODE_3 varchar(200),
+    VEHICLE_TYPE_CODE_4 varchar(200),
+    VEHICLE_TYPE_CODE_5 varchar(200)
+
 );
-    /*COLLISION_ID varchar(200),
-    VEHICLE_ID VARCHAR(240),
-    PERSON_ID VARCHAR(240),
-    CRASH_DATE DATE,
-    CRASH_TIME TIME,
-    BOROUGH VARCHAR(255),
-    ZIP_CODE VARCHAR(30) ,
-    LATITUDE DECIMAL(9,6),
-    LONGITUDE DECIMAL(9,6),
-    LOCATION VARCHAR(255),
-    ON_STREET_NAME VARCHAR(255),
-    CROSS_STREET_NAME VARCHAR(255),
-    OFF_STREET_NAME VARCHAR(255),
-    NUMBER_OF_PERSONS_INJURED INT,
-    NUMBER_OF_PERSONS_KILLED INT,
-    NUMBER_OF_PEDESTRIANS_INJURED INT,
-    NUMBER_OF_PEDESTRIANS_KILLED INT,
-    NUMBER_OF_CYCLIST_INJURED INT,
-    NUMBER_OF_CYCLIST_KILLED INT,
-    NUMBER_OF_MOTORIST_INJURED INT,
-    NUMBER_OF_MOTORIST_KILLED INT,
-    CONTRIBUTING_FACTOR_VEHICLE_1 VARCHAR(255),
-    CONTRIBUTING_FACTOR_VEHICLE_2 VARCHAR(255),
-    CONTRIBUTING_FACTOR_VEHICLE_3 VARCHAR(255),
-    CONTRIBUTING_FACTOR_VEHICLE_4 VARCHAR(255),
-    CONTRIBUTING_FACTOR_VEHICLE_5 VARCHAR(255)--,
-    --constraint person_fk foreign key (PERSON_ID) references personas(PERSON_ID),
-    --constraint vehicles_fk foreign key (VEHICLE_ID) references vehicles(VEHICLE_ID),
-    --constraint accidentes_pk PRIMARY KEY (COLLISION_ID)*/
-);
+
 
 create table if not exists colision_vehicle(
     VEHICLE_ID VARCHAR(240),-- NOT NULL,
+    COLLISION_ID INT,
     TRAVEL_DIRECTION VARCHAR(250),
     VEHICLE_OCCUPANTS INT,
     DRIVER_SEX VARCHAR(1),
@@ -242,7 +224,7 @@ create table if not exists colision_vehicle(
 COPY accidentes_text FROM 'C:\datos\Collisions_Crashes_20241020.csv' DELIMITER ',' CSV HEADER NULL '';
 COPY vehicles_text FROM 'C:\datos\Vehicles.csv' DELIMITER ';' CSV HEADER NULL '';
 COPY colision_vehicle_text FROM 'C:\datos\Collisions_Vehicles_20241020.csv' DELIMITER ',' CSV HEADER NULL '';
--- copy a person_vehicle_text
+COPY collision_persona_text FROM 'C:\datos\Collisions_Person_20241020.csv' DELIMITER ',' CSV HEADER NULL '';
 COPY personas from 'C:\datos\personas2.csv' DELIMITER ';' CSV HEADER NULL '';
 
 insert into accidentes (
@@ -269,9 +251,12 @@ insert into accidentes (
     CONTRIBUTING_FACTOR_VEHICLE_3,
     CONTRIBUTING_FACTOR_VEHICLE_4,
     CONTRIBUTING_FACTOR_VEHICLE_5,
-    COLLISION_ID,1
-    VEHICLE_ID,
-    PERSON_ID
+    COLLISION_ID,
+    VEHICLE_TYPE_CODE_1,
+    VEHICLE_TYPE_CODE_2,
+    VEHICLE_TYPE_CODE_3,
+    VEHICLE_TYPE_CODE_4,
+    VEHICLE_TYPE_CODE_5
 )
 select
     CRASH_DATE,
@@ -297,9 +282,12 @@ select
     CONTRIBUTING_FACTOR_VEHICLE_3,
     CONTRIBUTING_FACTOR_VEHICLE_4,
     CONTRIBUTING_FACTOR_VEHICLE_5,
-    COLLISION_ID,
-    VEHICLE_ID,
-    null
+    cast(COLLISION_ID as int),
+    VEHICLE_TYPE_CODE_1,
+    VEHICLE_TYPE_CODE_2,
+    VEHICLE_TYPE_CODE_3,
+    VEHICLE_TYPE_CODE_4,
+    VEHICLE_TYPE_CODE_5
 from accidentes_text;
 
 insert into vehicles (      select
@@ -318,6 +306,7 @@ insert into vehicles (      select
 insert into colision_vehicle (
     select
     VEHICLE_ID,-- NOT NULL,
+    cast(COLISION_ID as INT),
     TRAVEL_DIRECTION,
     cast(VEHICLE_OCCUPANTS as INT),
     DRIVER_SEX ,
@@ -335,10 +324,34 @@ insert into colision_vehicle (
     CONTRIBUTING_FACTOR_2
     from colision_vehicle_text
 );
+
+INSERT INTO collision_persona (
+                               select
+                               cast(UNIQUE_ID as INT),
+                               cast(COLLISION_ID as INT),
+                               PERSON_ID,
+                               PERSON_TYPE,
+                               PERSON_INJURY,
+                               VEHICLE_ID,
+                               cast(PERSON_AGE as INT),
+                               EJECTION,
+                               EMOTIONAL_STATUS,
+                               BODILY_INJURY,
+                               POSITION_IN_VEHICLE,
+                               SAFETY_EQUIPMENT,
+                               PED_LOCATION,
+                               PED_ACTION,
+                               COMPLAINT, PED_ROLE,
+                               CONTRIBUTING_FACTOR_1,
+                               CONTRIBUTING_FACTOR_2,
+                               PERSON_SEX
+                               from collision_persona_text);
+
+
 drop table accidentes_text;
 drop table vehicles_text;
 drop table colision_vehicle_text;
---drop de poerson colision
+drop table collision_persona_text;
 
 --1 Mostrar los vehículos que han tenido más de un accidente
 SELECT DISTINCT * FROM vehicles WHERE VEHICLE_ID IN (SELECT VEHICLE_ID FROM colision_vehicle GROUP BY vehicle_ID HAVING(count(*)>1));
@@ -351,7 +364,7 @@ select distinct * from vehicles where VEHICLE_YEAR<= (Select extract(year from n
 select vehicle_make, count(*) from vehicles group by vehicle_make order by count(*) desc limit 5;
 
 -- 4 Mostrar los datos de aquellos conductores implicados en más de 1 accidente.
-SELECT DISTINCT * FROM PERSONAS WHERE PERSON_ID IN (SELECT PERSON_ID FROM colision_person GROUP BY PERSON_ID HAVING(count(*)>1));
+SELECT DISTINCT * FROM PERSONAS WHERE PERSON_ID IN (SELECT PERSON_ID FROM collision_persona GROUP BY PERSON_ID HAVING(count(*)>1));
 
 -- 5. Mostrar los datos de los conductores con accidentes mayores de 65 años y menores de 26 ordenados ascendentemente.
 SELECT * FROM PERSONAS WHERE AGE(PERSON_DOB) BETWEEN INTERVAL '18 years' AND INTERVAL '65 years' ORDER BY PERSON_DOB;
@@ -359,5 +372,29 @@ SELECT * FROM PERSONAS WHERE AGE(PERSON_DOB) BETWEEN INTERVAL '18 years' AND INT
 SELECT distinct PERSON_DOB,AGE(PERSON_DOB) FROM PERSONAS ORDER BY PERSON_DOB desc;
 
 --6. Mostrar los datos de los conductores que tienen como vehículo un “Pickup”
-select personas.* from personas,ACCIDENTES where personas.PERSON_ID = ACCIDENTES.PERSON_ID and ACCIDENTES.VEHICLE_ID = VEHICLES.
+--select personas.* from personas,accidentes,collision_persona where personas.PERSON_ID = collision_persona.PERSON_ID and collision_persona.COLLISION_ID = accidentes.COLLISION_ID and accidentes.VEHICLE_TYPE_CODE_3 like '%Pick-up%';
+
+    SELECT personas.* 
+    FROM personas
+    JOIN collision_persona ON personas.PERSON_ID = collision_persona.PERSON_ID
+    JOIN accidentes ON collision_persona.COLLISION_ID = accidentes.COLLISION_ID
+    WHERE accidentes.VEHICLE_TYPE_CODE_3 LIKE '%Pick-up%';
+
+
+
+--7. Mostrar las 3 marcas de vehículos que sufren menos accidentes. De igual manera mostrar los 3 tipos de vehículo que menos accidentes sufren.
+SELECT VEHICLE_MAKE, COUNT(*) AS accident_count FROM vehicles WHERE VEHICLE_ID IN (
+SELECT VEHICLE_ID FROM colision_vehicle) GROUP BY VEHICLE_MAKE ORDER BY accident_count ASC LIMIT 3;
+
+
+--SELECT VEHICLE_TYPE, COUNT(*) AS accident_count FROM vehicles WHERE VEHICLE_ID IN (SELECT VEHICLE_ID FROM colision_vehicle) GROUP BY VEHICLE_TYPE ORDER BY accident_count ASC LIMIT 3;
+
+-- 8. Mostrar el numero de accidentes que ha sufrido cada marca.
+SELECT VEHICLE_MAKE, COUNT(*) AS accident_count FROM vehicles WHERE VEHICLE_ID IN (SELECT VEHICLE_ID FROM colision_vehicle) GROUP BY VEHICLE_MAKE ORDER BY accident_count DESC;
+
+--9. Mostrar la procedencia de los conductores que han sufrido accidentes.
+SELECT PERSON_CITY, PERSON_STATE, COUNT(*) AS accident_count FROM PERSONAS WHERE PERSON_ID IN ( SELECT PERSON_ID FROM COLLISION_PERSONA) GROUP BY PERSON_CITY, PERSON_STATE ORDER BY accident_count DESC;
+
+-- 10. Mostrar el numero de accidentes de los vehículos por estado de matriculación.
+SELECT STATE_REGISTRATION, COUNT(*) AS accident_count FROM vehicles WHERE VEHICLE_ID IN (SELECT VEHICLE_ID FROM colision_vehicle) GROUP BY STATE_REGISTRATION ORDER BY accident_count DESC;
 
