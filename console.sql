@@ -1,18 +1,10 @@
-CREATE DATABASE PECL2;
-/*create table if not exists personas_text(
-    PERSON_ID TEXT NOT NULL,
-    PERSON_SEX TEXT,
-    PERSON_LASTNAME TEXT,
-    PERSON_FIRSTNAME TEXT,
-    PERSON_PHONE TEXT,
-    PERSON_ADDRESS TEXT,
-    PERSON_CITY TEXT,
-    PERSON_STATE TEXT,
-    PERSON_ZIP TEXT,
-    PERSON_SSN TEXT,
-    PERSON_DOB TEXT
- --   constraint person_pk_t PRIMARY KEY (PERSON_ID)
-);*/
+/*CREATE DATABASE PECL2;
+alter DATABASE PECL2;
+create schema Colisiones;
+alter schema Colisiones;*/
+
+
+-- Creamos las tablas temporales necesarias
 CREATE TABLE IF NOT EXISTS collision_persona_text(
     UNIQUE_ID varchar(200),
     COLLISION_ID varchar(200),
@@ -109,9 +101,9 @@ create table if not exists colision_vehicle_text(
     CONTRIBUTING_FACTOR_2 varchar(300)
 );
 
-
+-- Se crean todas las tablas definitivas con su tipo de datos correcto.
 create table if not exists personas(
-    PERSON_ID CHAR(240) /*NOT NULL*/, -- Hay 36 carácteres en los que he visto, pero por si
+    PERSON_ID CHAR(240) /*NOT NULL*/,
     PERSON_SEX VARCHAR(1),
     PERSON_LASTNAME VARCHAR(255),
     PERSON_FIRSTNAME VARCHAR(255),
@@ -132,11 +124,9 @@ create table if not exists vehicles(
     VEHICLE_MAKE VARCHAR(256),
     VEHICLE_MODEL VARCHAR(256),
     VEHICLE_YEAR INT--,
-    --check(VEHICLE_YEAR > 1885), --> Es una chorrada, pero al parecer el primer vehiculo se creo en ese año: https://www.google.com/search?client=opera-gx&q=primer+automovil&sourceid=opera&ie=UTF-8&oe=UTF-8
     --constraint vehicles_pk PRIMARY KEY (VEHICLE_ID)
 );
 CREATE TABLE IF NOT EXISTS collision_persona(
-    --UNIQUE_ID,COLLISION_ID,CRASH_DATE,CRASH_TIME,PERSON_ID,PERSON_TYPE,PERSON_INJURY,VEHICLE_ID,PERSON_AGE,EJECTION,EMOTIONAL_STATUS,BODILY_INJURY,POSITION_IN_VEHICLE,SAFETY_EQUIPMENT,PED_LOCATION,PED_ACTION,COMPLAINT,PED_ROLE,CONTRIBUTING_FACTOR_1,CONTRIBUTING_FACTOR_2,PERSON_SEX
     UNIQUE_ID INT,
     COLLISION_ID INT,
     PERSON_ID VARCHAR(240),
@@ -161,7 +151,7 @@ CREATE TABLE IF NOT EXISTS collision_persona(
 );
 
 
-CREATE TABLE IF NOT EXISTS accidentes --Le cambio el nombre
+CREATE TABLE IF NOT EXISTS accidentes
 (
     CRASH_DATE varchar(200),
     CRASH_TIME varchar(200),
@@ -221,12 +211,16 @@ create table if not exists colision_vehicle(
     CONSTRAINT colision_persona FOREIGN KEY (PERSON_ID) REFERENCES PERSONAS(PERSON_ID)*/
 );
 
+-- Se copian los datos del CSV a las tablas temporales o a la definitiva en el caso de personas
+-- Se ha usado una ruta simple como lo es 'C:\datos'
 COPY accidentes_text FROM 'C:\datos\Collisions_Crashes_20241020.csv' DELIMITER ',' CSV HEADER NULL '';
 COPY vehicles_text FROM 'C:\datos\Vehicles.csv' DELIMITER ';' CSV HEADER NULL '';
 COPY colision_vehicle_text FROM 'C:\datos\Collisions_Vehicles_20241020.csv' DELIMITER ',' CSV HEADER NULL '';
 COPY collision_persona_text FROM 'C:\datos\Collisions_Person_20241020.csv' DELIMITER ',' CSV HEADER NULL '';
 COPY personas from 'C:\datos\personas2.csv' DELIMITER ';' CSV HEADER NULL '';
 
+
+-- Se insertan los datos en sus teblas definitivas con el formato y orden correcto.
 insert into accidentes (
     CRASH_DATE,
     CRASH_TIME,
@@ -299,10 +293,7 @@ insert into vehicles (      select
                             cast(VEHICLE_YEAR as INT)
                             from vehicles_text
                                );
-/*insert into colision_vehicle (select VEHICLE_ID,TRAVEL_DIRECTION,cast(VEHICLE_OCCUPANTS as INT),DRIVER_SEX,DRIVER_LICENSE_STATUS,DRIVER_LICENSE_JURISDICTION,PRE_CRASH,POINT_OF_IMPACT,VEHICLE_DAMAGE,
-                                     VEHICLE_DAMAGE_1,VEHICLE_DAMAGE_2,VEHICLE_DAMAGE_3,PUBLIC_PROPERTY_DAMAGE,PUBLIC_PROPERTY_DAMAGE_TYPE,CONTRIBUTING_FACTOR_1, CONTRIBUTING_FACTOR_2
-                              from colision_vehicle_text
-);*/
+
 insert into colision_vehicle (
     select
     VEHICLE_ID,-- NOT NULL,
@@ -347,11 +338,13 @@ INSERT INTO collision_persona (
                                PERSON_SEX
                                from collision_persona_text);
 
-
+-- Se eliminan todas las tablas auxiliares.
 drop table accidentes_text;
 drop table vehicles_text;
 drop table colision_vehicle_text;
 drop table collision_persona_text;
+
+--CONSULTAS SQL:
 
 --1 Mostrar los vehículos que han tenido más de un accidente
 SELECT DISTINCT * FROM vehicles WHERE VEHICLE_ID IN (SELECT VEHICLE_ID FROM colision_vehicle GROUP BY vehicle_ID HAVING(count(*)>1));
@@ -368,8 +361,7 @@ SELECT DISTINCT * FROM PERSONAS WHERE PERSON_ID IN (SELECT PERSON_ID FROM collis
 
 -- 5. Mostrar los datos de los conductores con accidentes mayores de 65 años y menores de 26 ordenados ascendentemente.
 SELECT * FROM PERSONAS WHERE AGE(PERSON_DOB) BETWEEN INTERVAL '18 years' AND INTERVAL '65 years' ORDER BY PERSON_DOB;
-
-SELECT distinct PERSON_DOB,AGE(PERSON_DOB) FROM PERSONAS ORDER BY PERSON_DOB desc;
+--SELECT distinct PERSON_DOB,AGE(PERSON_DOB) FROM PERSONAS ORDER BY PERSON_DOB desc;
 
 --6. Mostrar los datos de los conductores que tienen como vehículo un “Pickup”
 --select personas.* from personas,accidentes,collision_persona where personas.PERSON_ID = collision_persona.PERSON_ID and collision_persona.COLLISION_ID = accidentes.COLLISION_ID and accidentes.VEHICLE_TYPE_CODE_3 like '%Pick-up%';
@@ -380,14 +372,12 @@ SELECT distinct PERSON_DOB,AGE(PERSON_DOB) FROM PERSONAS ORDER BY PERSON_DOB des
     JOIN accidentes ON collision_persona.COLLISION_ID = accidentes.COLLISION_ID
     WHERE accidentes.VEHICLE_TYPE_CODE_3 LIKE '%Pick-up%';
 
-
-
 --7. Mostrar las 3 marcas de vehículos que sufren menos accidentes. De igual manera mostrar los 3 tipos de vehículo que menos accidentes sufren.
 SELECT VEHICLE_MAKE, COUNT(*) AS accident_count FROM vehicles WHERE VEHICLE_ID IN (
 SELECT VEHICLE_ID FROM colision_vehicle) GROUP BY VEHICLE_MAKE ORDER BY accident_count ASC LIMIT 3;
 
-
---SELECT VEHICLE_TYPE, COUNT(*) AS accident_count FROM vehicles WHERE VEHICLE_ID IN (SELECT VEHICLE_ID FROM colision_vehicle) GROUP BY VEHICLE_TYPE ORDER BY accident_count ASC LIMIT 3;
+SELECT VEHICLE_TYPE, COUNT(*) AS accident_count FROM vehicles WHERE VEHICLE_ID IN (
+SELECT VEHICLE_ID FROM colision_vehicle) GROUP BY VEHICLE_TYPE ORDER BY accident_count ASC LIMIT 3;
 
 -- 8. Mostrar el numero de accidentes que ha sufrido cada marca.
 SELECT VEHICLE_MAKE, COUNT(*) AS accident_count FROM vehicles WHERE VEHICLE_ID IN (SELECT VEHICLE_ID FROM colision_vehicle) GROUP BY VEHICLE_MAKE ORDER BY accident_count DESC;
@@ -397,4 +387,38 @@ SELECT PERSON_CITY, PERSON_STATE, COUNT(*) AS accident_count FROM PERSONAS WHERE
 
 -- 10. Mostrar el numero de accidentes de los vehículos por estado de matriculación.
 SELECT STATE_REGISTRATION, COUNT(*) AS accident_count FROM vehicles WHERE VEHICLE_ID IN (SELECT VEHICLE_ID FROM colision_vehicle) GROUP BY STATE_REGISTRATION ORDER BY accident_count DESC;
+
+
+
+-- Ejercicio 1: Proceder a la limpieza de las tablas vehículos, Colision-vehiculo,
+-- Accidentes de la siguiente manera: Eliminar todos aquellos vehicle_id que sean nulos,
+-- vacíos o que tengan una longitud inferior a 10 caracteres
+
+-- La tabla de accidentes no tiene campo VEHICLE_ID.
+
+delete from colision_vehicle where VEHICLE_ID is null or VEHICLE_ID = '' or length(VEHICLE_ID) < 10;
+delete from vehicles where VEHICLE_ID is null or VEHICLE_ID = '' or character_length(VEHICLE_ID) < 10;
+
+select VEHICLE_ID from colision_vehicle where VEHICLE_ID is null or VEHICLE_ID = '' or length(VEHICLE_ID) < 10
+select VEHICLE_ID from vehicles where VEHICLE_ID is null or VEHICLE_ID = '' or character_length(VEHICLE_ID) < 10
+
+
+-- Ejercicio2: Proceder a la limpieza de las tablas persona de la siguiente manera:
+-- Eliminar todos aquellos registros cuyo person_id sea nulo, vacio o tenga una
+-- longitud inferior a 10 caracteres.
+
+delete from personas where person_id is null or person_id = '' or character_length(person_id) < 10;
+
+select person_id from personas where person_id is null or person_id = '' or character_length(person_id) < 10
+
+
+
+/*
+Ejercicio 4: En la tabla vehículos vamos a actualizar los datos que estén vacíos o nulos de la siguiente manera:
+Vehicle_type=>unknown
+Vehicle_make=>unknown
+Vehicle_model=>unknown
+Vehicle_year=> 9999
+State_registration-> unknown
+*/
 
