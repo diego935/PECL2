@@ -114,7 +114,7 @@ create table if not exists personas(
     PERSON_ZIP VARCHAR(255),
     PERSON_SSN VARCHAR(255),
     PERSON_DOB DATE--,
-    --constraint person_pk PRIMARY KEY (PERSON_ID)
+    --  constraint person_pk PRIMARY KEY (PERSON_ID)
 );
 
 create table if not exists vehicles(
@@ -204,6 +204,7 @@ create table if not exists colision_vehicle(
     VEHICLE_DAMAGE_3 VARCHAR(255),
     PUBLIC_PROPERTY_DAMAGE VARCHAR(1000),
     PUBLIC_PROPERTY_DAMAGE_TYPE VARCHAR(1000),
+    STATE_REGISTRATION varchar(200),
     CONTRIBUTING_FACTOR_1 VARCHAR(255),
     CONTRIBUTING_FACTOR_2 VARCHAR(255)/*,
     constraint COLISION_VEHICULO_pk PRIMARY KEY (VEHICLE_ID, PERSON_ID),
@@ -311,6 +312,7 @@ insert into colision_vehicle (
     VEHICLE_DAMAGE_3 ,
     PUBLIC_PROPERTY_DAMAGE ,
     PUBLIC_PROPERTY_DAMAGE_TYPE ,
+    STATE_REGISTRATION,
     CONTRIBUTING_FACTOR_1 ,
     CONTRIBUTING_FACTOR_2
     from colision_vehicle_text
@@ -422,3 +424,75 @@ Vehicle_year=> 9999
 State_registration-> unknown
 */
 
+update vehicles
+SET VEHICLE_TYPE = 'unknown' where VEHICLE_TYPE IS NULL OR VEHICLE_TYPE = '';
+update vehicles
+set VEHICLE_MAKE = 'unknown' where  VEHICLE_MAKE IS NULL OR VEHICLE_MAKE = '';
+update vehicles
+Set VEHICLE_MODEL = 'unknown' where VEHICLE_MODEL IS NULL OR VEHICLE_MODEL = '';
+update vehicles
+Set VEHICLE_YEAR = 9999 where VEHICLE_YEAR IS NULL;
+update vehicles
+Set STATE_REGISTRATION = 'unknown' where  STATE_REGISTRATION IS NULL OR STATE_REGISTRATION = '';
+
+/*
+Ejercicio 5: Vamos a copiar los datos del campo person_sex de la tabla
+colision_persona a la tabla personas donde coincidan el person_id. Borraremos el
+campo person_sex de la tabla colision_persona y actualizaremos todos aquellos
+person_sex que sean nulos o vacíos de la tabla persona con una “U”
+*/
+
+update personas
+set person_sex  = (select person_sex from collision_persona where collision_persona.person_id = personas.person_id );
+
+alter table collision_persona drop person_sex;
+
+update personas
+set person_sex  = 'U' where person_sex is null or person_sex ='';
+/*
+Ejercicio 7: Añadir un campo vehicle_accidents en la tabla vehículos y crear un trigger
+que calcule el numero de accidentes totales que ha sufrido ese vehículo basándose en
+los datos que existen en la tabla colision-vehiculo.
+*/
+alter table vehicles add column vehicle_accidents int default 0;
+alter table vehicles drop column vehicle_accidents
+/*CREATE TRIGGER Numero_Accidentes AFTER INSERT /*or UPDATE*/ ON colision_vehicle referencing new row as nuevoreg for each row --execute UPDATE vehicles SET vehicle_accidents = vehicle_accidents + 1 WHERE vehicles.VEHICLE_ID = nuevoreg.VEHICLE_ID; end );*/
+insert into colision_vehicle ()
+
+
+CREATE TRIGGER Numero_Accidentes
+AFTER INSERT ON colision_vehicle
+FOR EACH ROW
+EXECUTE FUNCTION actualizar_accidentes();
+
+CREATE OR REPLACE FUNCTION actualizar_accidentes()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE vehicles
+    SET vehicle_accidents = vehicle_accidents + 1
+    WHERE vehicles.VEHICLE_ID = NEW.VEHICLE_ID;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+
+
+
+
+
+
+
+/*
+Ejercicio 8: Crear todas las PK y FK de las tablas, según lo diseñado en la PL2, para
+que los datos mantengan su integridad referencial.*/
+
+--
+UPDATE vehicles
+SET state_registration = (SELECT colision_vehicle.state_registration FROM colision_vehicle WHERE colision_vehicle.vehicle_id = vehicles.vehicle_id);
+ALTER TABLE colision_vehicle DROP COLUMN state_registration;
+
+
+
+SELECT colision_vehicle.state_registration FROM colision_vehicle, vehicles WHERE colision_vehicle.vehicle_id = vehicles.vehicle_id
