@@ -189,6 +189,7 @@ CREATE TABLE IF NOT EXISTS accidentes
 
 
 create table if not exists colision_vehicle(
+    UNIQUE_ID int,
     VEHICLE_ID VARCHAR(240),-- NOT NULL,
     COLLISION_ID INT,
     TRAVEL_DIRECTION VARCHAR(250),
@@ -296,7 +297,10 @@ insert into vehicles (      select
                                );
 
 insert into colision_vehicle (
+
+
     select
+    cast(UNIQUE_ID as int),
     VEHICLE_ID,-- NOT NULL,
     cast(COLISION_ID as INT),
     TRAVEL_DIRECTION,
@@ -402,8 +406,9 @@ SELECT STATE_REGISTRATION, COUNT(*) AS accident_count FROM vehicles WHERE VEHICL
 delete from colision_vehicle where VEHICLE_ID is null or VEHICLE_ID = '' or length(VEHICLE_ID) < 10;
 delete from vehicles where VEHICLE_ID is null or VEHICLE_ID = '' or character_length(VEHICLE_ID) < 10;
 
-select VEHICLE_ID from colision_vehicle where VEHICLE_ID is null or VEHICLE_ID = '' or length(VEHICLE_ID) < 10
-select VEHICLE_ID from vehicles where VEHICLE_ID is null or VEHICLE_ID = '' or character_length(VEHICLE_ID) < 10
+select VEHICLE_ID from colision_vehicle where VEHICLE_ID is null or VEHICLE_ID = '' or length(VEHICLE_ID) < 10;
+select VEHICLE_ID from vehicles where VEHICLE_ID is null or VEHICLE_ID = '' or character_length(VEHICLE_ID) < 10;
+
 
 
 -- Ejercicio2: Proceder a la limpieza de las tablas persona de la siguiente manera:
@@ -412,7 +417,18 @@ select VEHICLE_ID from vehicles where VEHICLE_ID is null or VEHICLE_ID = '' or c
 
 delete from personas where person_id is null or person_id = '' or character_length(person_id) < 10;
 
-select person_id from personas where person_id is null or person_id = '' or character_length(person_id) < 10
+select person_id from personas where person_id is null or person_id = '' or character_length(person_id) < 10;
+
+/*Ejercicio 3: Vamos a proceder a copiar los datos contenidos en state_registration de la
+tabla colision-vehiculos a la tabla vehículos haciendo coincidir su vehicle_id y eliminar
+la columna de la primera tabla.*/
+
+UPDATE vehicles SET state_registration = (SELECT colision_vehicle.state_registration FROM colision_vehicle
+                                                                                     WHERE colision_vehicle.vehicle_id = vehicles.vehicle_id);
+
+
+
+ALTER TABLE colision_vehicle DROP COLUMN state_registration;
 
 
 
@@ -444,22 +460,55 @@ person_sex que sean nulos o vacíos de la tabla persona con una “U”
 */
 
 update personas
-set person_sex  = (select person_sex from collision_persona where collision_persona.person_id = personas.person_id );
+set person_sex  = (select person_sex from collision_persona where collision_persona.person_id = personas.person_id )
+
+where exists(select 1 from collision_persona where collision_persona.person_id = personas.person_id );
+
+;
 
 alter table collision_persona drop person_sex;
 
 update personas
 set person_sex  = 'U' where person_sex is null or person_sex ='';
+
+
+
+
+/*Ejercicio 6: Añadir el campo person_age a la tabla persona y crear un trigger que
+calcule la edad cuando se cree un nuevo registro en esa tabla.*/
+
+CREATE or replace FUNCTION calcular_edad()
+RETURNS TRIGGER AS $$ --/Devuelve al trigger/
+BEGIN
+    NEW.person_age = extract(year from age(now(), new.person_dob));   --Restar fecha actual con la de nacimiento y retornar edad actual
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;-- /función está escrita en PL/pgSQL/
+
+ALTER TABLE personas
+ADD COLUMN person_age INTEGER;
+
+CREATE TRIGGER Calcular_Edad_Trigger
+BEFORE INSERT ON personas
+FOR EACH ROW
+EXECUTE FUNCTION calcular_edad();
+
+insert into personas values ('000004as29-b69c-43cc-b5f1-9f9ee397bd84','M','Pittman','Christopher','924.961.5639x06278','746 Christina Streets Apt. 801','Jeremyview','West Virginia','39495;510-49-6034','','1987-06-03');
+select * from personas where PERSON_ID = '000004as29-b69c-43cc-b5f1-9f9ee397bd84'
+
+
+
+
+
+
+
 /*
 Ejercicio 7: Añadir un campo vehicle_accidents en la tabla vehículos y crear un trigger
 que calcule el numero de accidentes totales que ha sufrido ese vehículo basándose en
 los datos que existen en la tabla colision-vehiculo.
 */
 alter table vehicles add column vehicle_accidents int default 0;
-alter table vehicles drop column vehicle_accidents
-/*CREATE TRIGGER Numero_Accidentes AFTER INSERT /*or UPDATE*/ ON colision_vehicle referencing new row as nuevoreg for each row --execute UPDATE vehicles SET vehicle_accidents = vehicle_accidents + 1 WHERE vehicles.VEHICLE_ID = nuevoreg.VEHICLE_ID; end );*/
-insert into colision_vehicle ()
-
+--alter table vehicles drop column vehicle_accidents;
 
 CREATE TRIGGER Numero_Accidentes
 AFTER INSERT ON colision_vehicle
@@ -476,6 +525,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+insert into colision_vehicle values(19140702,4213082,0553ab4d-9500-4cba-8d98-f4d7f89d5856,NY,Station Wagon/Sport Utility Vehicle,'TOYT -CAR/SUV',,2002,North,1,M,Licensed,NY,Going Straight Ahead,Left Front Bumper,Left Front Quarter Panel,,,,N,,Driver Inattention/Distraction,Unspecified);
+
 
 
 
@@ -488,6 +539,21 @@ $$ LANGUAGE plpgsql;
 /*
 Ejercicio 8: Crear todas las PK y FK de las tablas, según lo diseñado en la PL2, para
 que los datos mantengan su integridad referencial.*/
+alter table personas add constraint PKPersonas primary key (person_id);
+
+alter table collision_persona add constraint FKColision_persona_Persona foreign key (PERSON_ID) references personas(PERSON_ID);
+alter table collision_persona add constraint FKColision_persona_Vehicle foreign key (VEHICLE_ID) references vehicles(VEHICLE_ID);
+alter table collision_persona add constraint COLISION_VEHICULO_pk PRIMARY KEY (UNIQUE_ID);
+
+alter table vehicles add constraint vehicles_pk_t PRIMARY KEY (VEHICLE_ID);
+--alter table colision_vehicle add constraint COLISION_VEHICULO_pk PRIMARY KEY (VEHICLE_ID, PERSON_ID);
+
+alter table colision_vehicle add constraint vehicles_fk foreign key (VEHICLE_ID) references PERSONAS(PERSON_ID);
+alter table colision_vehicle add constraint COLISION_VEHICULO_pk PRIMARY KEY (UNIQUE_ID);
+
+--alter table colision_vehicle add CONSTRAINT colision_persona FOREIGN KEY (PERSON_ID) REFERENCES PERSONAS(PERSON_ID);
+
+alter table accidentes add constraint accidentes_pk primary key (COLLISION_ID);
 
 --
 UPDATE vehicles
@@ -497,3 +563,49 @@ ALTER TABLE colision_vehicle DROP COLUMN state_registration;
 
 
 SELECT colision_vehicle.state_registration FROM colision_vehicle, vehicles WHERE colision_vehicle.vehicle_id = vehicles.vehicle_id
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- Solucion Laura
+
+--5.PRACTICA 3. Vamos a copiar los datos del campo person_sex de la tabla colision_persona. Borraremos el campo
+-- person_sex de la tabla colision_persona y actualizaremos todos aquellos person_sex que sean nulos o vacíos de la tabla persona con una “U”.
+-- Copiar los datos de la columna person_sex de colision_persona a personas
+UPDATE personas AS p
+SET person_sex = c.person_sex
+FROM collision_persona AS c
+WHERE p.person_id = c.person_id;
+
+-- Eliminar la columna person_sex de la tabla colision_persona
+ALTER TABLE collision_persona
+DROP COLUMN person_sex;
+
+-- Actualizar los valores vacíos o nulos de la tabla personas con "U"
+UPDATE personas
+SET person_sex = 'U'
+WHERE person_sex IS NULL;
+
+
+
